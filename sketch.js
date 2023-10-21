@@ -414,20 +414,39 @@ function chooseMove(move, pMoves) {
 async function predict(input) {
     const sess = new onnx.InferenceSession();
     await sess.loadModel('./data/onnx-model.onnx');
-    const outputMap = await sess.run([input])
-    const outputTensor = outputMap.values().next().value
-    console.log(outputTensor.data)
-    
-    return onnx.ArgMax(outputTensor.data)
+    const outputMap = await sess.run([input]);
+    const outputTensor = outputMap.values().next().value;
+        // console.log(outputTensor.data);
+        // console.log(argmax(outputTensor.data));
+    return argmax(outputTensor.data);
+}
+
+function argmax(arr) {
+    if (arr.length === 0) {
+        return -1;
+    }
+
+    var max = arr[0];
+    var maxIndex = 0;
+
+    for (var i = 1; i < arr.length; i++) {
+        if (arr[i] > max) {
+            maxIndex = i;
+            max = arr[i];
+        }
+    }
+
+    return maxIndex;
 }
 
 async function nextMove() {
+    let MOVE_MAP = ["U", "R", "F", "U'", "R'", "F'", "U2", "R2", "F2"];
     let move;
     let key = fields.toString();
     if (moves[key] === undefined || moves[key].length == 0) {
         moves[key] = [...possibleMoves];
         let newFields = transformFields();
-        move = await predict(newFields);
+        move = MOVE_MAP[await predict(newFields)];
         if (move == getOppositeMove(lastMove)) {
             moves[key].splice(moves[key].indexOf(move), 1);
             move = moves[key][Math.floor(Math.random() * moves[key].length)];
@@ -462,7 +481,7 @@ async function nextMove() {
     return move
 }
 
-let solveMoves = "";
+let solveMoves = [];
 
 async function solve() {
     counter = 0;
@@ -497,14 +516,14 @@ async function solve() {
                 F2();
                 break;
         }
-        solveMoves += move + " "
+        solveMoves.push(move)
         counter += 1;
     }
     if (solved()) {
         if (solveMoves.length == 0) return false;
-        alert(solveMoves);
+        alert(solveMoves.join(" "));
         moves = {};
-        solveMoves = "";
+        solveMoves = [];
     } else {
         alert("Timed out with Partial Solve, click Solve again to complete it.")
     }
