@@ -418,7 +418,7 @@ async function predict(input) {
     const outputTensor = outputMap.values().next().value
     console.log(outputTensor.data)
     
-    return outputTensor.data
+    return onnx.ArgMax(outputTensor.data)
 }
 
 function nextMove() {
