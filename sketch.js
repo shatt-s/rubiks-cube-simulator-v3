@@ -162,10 +162,10 @@ function getPixels() {
 }
 
 let solveButton;
-function preload() {
+async function preload() {
     solveButton = createButton("Solve");
     solveButton.position(5, 5);
-    solveButton.mousePressed(solve);
+    solveButton.mousePressed((await solve));
     solveButton.addClass("customButton");
 }
 
@@ -378,15 +378,15 @@ function getOppositeMove(move) {
 }
 
 function transformFields() {
-    let newFields = 
-    new onnx.Tensor(new Float32Array([
-        [0.0, 0.0, fields[12], fields[13], 0.0, 0.0, 0.0, 0.0],
-        [0.0, 0.0, fields[14], fields[15], 0.0, 0.0, 0.0, 0.0],
-        [fields[5], fields[4], fields[20], fields[21], fields[16], fields[17], fields[9], fields[8]],
-        [fields[7], fields[6], fields[22], fields[23], fields[18], fields[18], fields[11], fields[10]],
-        [0.0, 0.0, fields[2], fields[3], 0.0, 0.0, 0.0, 0.0],
-        [0.0, 0.0, fields[0], fields[1], 0.0, 0.0, 0.0, 0.0],
-    ]), 'float32', [1, 1, 6, 8])
+    let newFieldsArray = new Float32Array([
+        0.0, 0.0, fields[12], fields[13], 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, fields[14], fields[15], 0.0, 0.0, 0.0, 0.0,
+        fields[5], fields[4], fields[20], fields[21], fields[16], fields[17], fields[9], fields[8],
+        fields[7], fields[6], fields[22], fields[23], fields[18], fields[18], fields[11], fields[10],
+        0.0, 0.0, fields[2], fields[3], 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, fields[0], fields[1], 0.0, 0.0, 0.0, 0.0,
+    ])
+    let newFields = new onnx.Tensor(newFieldsArray, 'float32', [1, 1, 6, 8])
     return newFields
 }
 
@@ -421,13 +421,13 @@ async function predict(input) {
     return onnx.ArgMax(outputTensor.data)
 }
 
-function nextMove() {
+async function nextMove() {
     let move;
     let key = fields.toString();
     if (moves[key] === undefined || moves[key].length == 0) {
         moves[key] = [...possibleMoves];
         let newFields = transformFields();
-        move = predict(newFields);
+        move = await predict(newFields);
         if (move == getOppositeMove(lastMove)) {
             moves[key].splice(moves[key].indexOf(move), 1);
             move = moves[key][Math.floor(Math.random() * moves[key].length)];
@@ -464,10 +464,10 @@ function nextMove() {
 
 let solveMoves = "";
 
-function solve() {
+async function solve() {
     counter = 0;
     while (!solved() && counter < 400) {
-        let move = nextMove();
+        let move = await nextMove();
         switch (move) {
             case "U":
                 U();
